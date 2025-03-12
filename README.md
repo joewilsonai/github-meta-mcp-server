@@ -2,6 +2,10 @@
 
 A Model Context Protocol (MCP) server that provides tools for interacting with GitHub's API. Currently supports creating repositories with descriptions, topics, and website URLs.
 
+<a href="https://glama.ai/mcp/servers/yrvpqd8vee">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/yrvpqd8vee/badge" alt="GitHub Server MCP server" />
+</a>
+
 ## Features
 
 - Create GitHub repositories with auto-generated names from descriptions
