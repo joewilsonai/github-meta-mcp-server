@@ -1,159 +1,88 @@
-# GitHub MCP Server
+<div align="center">
 
-A Model Context Protocol (MCP) server that provides tools for interacting with GitHub's API. Currently supports creating repositories with descriptions, topics, and website URLs.
+# 🐙 GitHub Meta MCP Server
 
-## Features
+**Manage GitHub repositories with natural language via the Model Context Protocol.**
 
-- Create GitHub repositories with auto-generated names from descriptions
-- Add topics/tags to repositories
-- Set repository homepages
-- Auto-initialize repositories with README files
+An MCP server that lets Claude (or any MCP-compatible client) create and configure GitHub repositories from plain-English commands.
 
-## Installation
+[![MCP](https://img.shields.io/badge/MCP-Server-d97757)](https://modelcontextprotocol.io)
+[![Node](https://img.shields.io/badge/Node-18+-339933?logo=node.js)](https://nodejs.org)
+[![License](https://img.shields.io/badge/License-MIT-blue)](#license)
 
-1. Clone the repository
-2. Install dependencies:
+</div>
+
+---
+
+## What it does
+
+Talk to Claude. Claude talks to this server. This server talks to GitHub.
+
+> *"Create a private repo called 'lunchbox' with topics ai, agents, mcp and the homepage thelunchbox.app"*
+
+→ Repo created. Topics set. Homepage set. README initialized.
+
+## Tools exposed
+
+### `create_repo`
+
+Create or update a GitHub repository via natural language. Handles:
+
+- **Repo name** (auto-generated from description if not specified)
+- **Visibility** (public / private)
+- **Description**
+- **Topics / tags** (multiple, comma-separated)
+- **Homepage URL**
+- **Auto-init with README**
+
+## Install
+
 ```bash
+git clone https://github.com/joewilsonai/github-meta-mcp-server
+cd github-meta-mcp-server
 npm install
-```
-3. Build the server:
-```bash
 npm run build
 ```
 
-## Configuration
+## Configure in Claude Desktop
 
-The server requires a GitHub personal access token with repository creation permissions. Add the following to your MCP settings file:
+Edit your `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
-    "github": {
+    "github-meta": {
       "command": "node",
-      "args": ["path/to/github-server/build/index.js"],
+      "args": ["/absolute/path/to/github-meta-mcp-server/build/index.js"],
       "env": {
-        "GITHUB_TOKEN": "your-github-token"
+        "GITHUB_TOKEN": "ghp_your_personal_access_token"
       }
     }
   }
 }
 ```
 
-## Available Tools
+Restart Claude Desktop. The `create_repo` tool will appear.
 
-### create_repo
+## Required token scopes
 
-Create or update GitHub repositories using natural language commands.
+Your GitHub personal access token needs:
 
-#### Command Format
+- `repo` — to create and configure repos
+- `delete_repo` — only if you want to support deletion in future versions
 
-The tool accepts natural language commands for different operations:
+Generate one at [github.com/settings/tokens](https://github.com/settings/tokens).
 
-Creating repositories:
-```
-Create a repository for [description] with tags [tag1 tag2 tag3] website [url]
-```
-or
-```
-Make a new repository called [description] tagged with [tag1, tag2, tag3]
-```
+## Stack
 
-Updating repository description:
-```
-Update [owner/repo] description to [new description]
-```
-or
-```
-Change [repo-name] description as [new description]
-```
+- **TypeScript** + **Node.js 18+**
+- **@modelcontextprotocol/sdk**
+- **@octokit/rest** for the GitHub API
 
-Updating repository tags:
-```
-Update [owner/repo] tags to [tag1 tag2 tag3]
-```
-or
-```
-Set [repo-name] topics as [tag1, tag2, tag3]
-```
+## Related MCP servers
 
-Updating repository website:
-```
-Update [owner/repo] website to [url]
-```
-or
-```
-Set [repo-name] homepage as [url]
-```
-
-#### Example Usage
-
-Creating a new repository:
-```typescript
-const result = await use_mcp_tool({
-  server_name: "github",
-  tool_name: "create_repo",
-  arguments: {
-    command: "Create a repository for my machine learning image classifier with tags python tensorflow computer-vision website https://example.com/docs"
-  }
-});
-```
-
-This will:
-1. Create a repository named "my-machine-learning-image-classifier"
-2. Set the description as "my machine learning image classifier"
-3. Add "python", "tensorflow", and "computer-vision" as repository topics
-4. Set the website to "https://example.com/docs"
-5. Initialize with a README file
-
-Updating repository description:
-```typescript
-const result = await use_mcp_tool({
-  server_name: "github",
-  tool_name: "create_repo",
-  arguments: {
-    command: "Update username/existing-repo description to Updated ML project for image classification"
-  }
-});
-```
-
-Updating repository tags:
-```typescript
-const result = await use_mcp_tool({
-  server_name: "github",
-  tool_name: "create_repo",
-  arguments: {
-    command: "Update username/existing-repo tags to machine-learning python updated"
-  }
-});
-```
-
-Updating repository website:
-```typescript
-const result = await use_mcp_tool({
-  server_name: "github",
-  tool_name: "create_repo",
-  arguments: {
-    command: "Update username/existing-repo website to https://example.com/new-docs"
-  }
-});
-```
-
-The tool understands various natural language patterns and keywords:
-- Create/make/new for creating repositories
-- Update/change/set/modify for updating repositories
-- "description to/as" for updating descriptions
-- "tags/topics to/as" for updating tags
-- "website/homepage/url to/as" for updating websites
-
-## Development
-
-To modify or extend the server:
-
-1. Make changes to `src/index.ts`
-2. Rebuild the server:
-```bash
-npm run build
-```
+- 🧠 **[second-opinion-mcp-server](https://github.com/joewilsonai/second-opinion-mcp-server)** (⭐ 16) — Get a second opinion from Gemini / Perplexity / Stack Overflow
+- 🔍 **[mcp-perplexity-server](https://github.com/joewilsonai/mcp-perplexity-server)** (⭐ 14) — Perplexity-backed code analysis
 
 ## License
 
