@@ -1,52 +1,49 @@
-<div align="center">
+# GitHub Meta MCP Server
 
-# 🐙 GitHub Meta MCP Server
+**Create GitHub repositories and edit their description, topics and website from a Claude conversation.**
 
-**Manage GitHub repositories with natural language via the Model Context Protocol.**
+A small [Model Context Protocol](https://modelcontextprotocol.io) server with one tool. You (or Claude) pass a plain-English command; the server picks it apart with simple pattern matching and calls the GitHub REST API with your token. There is no language model inside the server, so the wording matters.
 
-An MCP server that lets Claude (or any MCP-compatible client) create and configure GitHub repositories from plain-English commands.
+## Status
 
-[![MCP](https://img.shields.io/badge/MCP-Server-d97757)](https://modelcontextprotocol.io)
-[![Node](https://img.shields.io/badge/Node-18+-339933?logo=node.js)](https://nodejs.org)
-[![License](https://img.shields.io/badge/License-MIT-blue)](#license)
+Last updated May 2026. Checked in November 2026: `npm ci` and `npm run build` succeed, the server starts, and commands in the forms below parse and reach the GitHub API. Calls with a real token were not tested.
 
-</div>
-
----
-
-## What it does
-
-Talk to Claude. Claude talks to this server. This server talks to GitHub.
-
-> *"Create a private repo called 'lunchbox' with topics ai, agents, mcp and the homepage thelunchbox.app"*
-
-→ Repo created. Topics set. Homepage set. README initialized.
-
-## Tools exposed
+## Tool
 
 ### `create_repo`
 
-Create or update a GitHub repository via natural language. Handles:
+One argument, `command` (string). It understands four forms:
 
-- **Repo name** (auto-generated from description if not specified)
-- **Visibility** (public / private)
-- **Description**
-- **Topics / tags** (multiple, comma-separated)
-- **Homepage URL**
-- **Auto-init with README**
+| Command | What happens |
+|---|---|
+| `Create a repository for my machine learning project` | Creates a public repo under your account, initialized with a README. The words after `for`, `called` or `named`, up to the first comma or period, become the description, and a slug of them becomes the name (here `my-machine-learning-project`). |
+| `Update owner/repo description to A better description` | Replaces the description. |
+| `Set owner/repo topics to ai mcp tools` | Replaces all topics. Topics are split on spaces or commas and lowercased. |
+| `Update owner/repo website to https://example.com` | Sets the homepage URL. |
+
+Things to know:
+
+- Create commands must say `repository`, not `repo`: "Create a repo called lunchbox" is rejected.
+- Update commands need the repository as `owner/repo`, right after `update`, `change` or `set`.
+- Any command containing `update`, `change` or `set` anywhere, even inside a word such as "dataset", is treated as an update.
+- Set topics with an update command after creating the repo. The server passes topics from a create command to GitHub's create-repository API, which does not accept them.
+- New repos are always public. There is no option to make them private.
+- There is no delete.
 
 ## Install
+
+Build from source with Node 18 or newer:
 
 ```bash
 git clone https://github.com/joewilsonai/github-meta-mcp-server
 cd github-meta-mcp-server
-npm install
+npm ci
 npm run build
 ```
 
-## Configure in Claude Desktop
+## Configure Claude Desktop
 
-Edit your `claude_desktop_config.json`:
+Add this to `claude_desktop_config.json`, with the absolute path to your clone and your own token:
 
 ```json
 {
@@ -55,35 +52,17 @@ Edit your `claude_desktop_config.json`:
       "command": "node",
       "args": ["/absolute/path/to/github-meta-mcp-server/build/index.js"],
       "env": {
-        "GITHUB_TOKEN": "ghp_your_personal_access_token"
+        "GITHUB_TOKEN": "<your-github-token>"
       }
     }
   }
 }
 ```
 
-Restart Claude Desktop. The `create_repo` tool will appear.
+Restart Claude Desktop and the `create_repo` tool appears.
 
-## Required token scopes
+The token is read from the `GITHUB_TOKEN` environment variable only; the server will not start without it. A classic personal access token with the `repo` scope (or `public_repo`, since new repos are public) covers everything the tool does. Create one in [GitHub token settings](https://github.com/settings/tokens).
 
-Your GitHub personal access token needs:
+## Built with
 
-- `repo` — to create and configure repos
-- `delete_repo` — only if you want to support deletion in future versions
-
-Generate one at [github.com/settings/tokens](https://github.com/settings/tokens).
-
-## Stack
-
-- **TypeScript** + **Node.js 18+**
-- **@modelcontextprotocol/sdk**
-- **@octokit/rest** for the GitHub API
-
-## Related MCP servers
-
-- 🧠 **[second-opinion-mcp-server](https://github.com/joewilsonai/second-opinion-mcp-server)** (⭐ 16) — Get a second opinion from Gemini / Perplexity / Stack Overflow
-- 🔍 **[mcp-perplexity-server](https://github.com/joewilsonai/mcp-perplexity-server)** (⭐ 14) — Perplexity-backed code analysis
-
-## License
-
-MIT
+TypeScript, `@modelcontextprotocol/sdk` 0.6.0 and Octokit.
